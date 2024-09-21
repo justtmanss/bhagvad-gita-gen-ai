@@ -1,13 +1,16 @@
-from flask_sqlalchemy import SQLAlchemy
+# models.py
+from sqlalchemy import Column, Integer, String, Text
+from database import Base
 
-db = SQLAlchemy()
+class Chapter(Base):
+    __tablename__ = "chapters"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    summary = Column(Text)
 
-class Chapter(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    slokas = db.relationship('Sloka', backref='chapter', lazy=True)
-
-class Sloka(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    text = db.Column(db.Text, nullable=False)
-    chapter_id = db.Column(db.Integer, db.ForeignKey('chapter.id'), nullable=False)
+class Sloka(Base):
+    __tablename__ = "slokas"
+    id = Column(Integer, primary_key=True, index=True)
+    chapter_id = Column(Integer, index=True)
+    sloka_text = Column(Text)
+    meaning = Column(Text)
