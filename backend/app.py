@@ -1,13 +1,11 @@
-# app.py
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from routes import router  # Import API routes
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from model import Chapter, Sloka, Session  # Import the models and Session
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker, Session  # Ensure Session is imported here
+from model import Chapter, Sloka  # Ensure models are correctly imported
 from database import SessionLocal, search_database  # Import your functions
 import openai
+from pydantic import BaseModel  # Add this import
 
 
 app = FastAPI()
@@ -21,54 +19,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the Bhagavad Gita Explorer"}
-
-# Include API routes from routes.py
-app.include_router(router)
-
-# Set up the SQLAlchemy database connection
-DATABASE_URI = 'postgresql://aakash:chootu@localhost/bhagavad_gita_explorer'
-engine = create_engine(DATABASE_URI)
-Session = sessionmaker(bind=engine)
-
-@app.route('/chapters', methods=['GET'])
-def get_chapters():
-    session = Session()
-    chapters = session.query(Chapter).all()
-    session.close()
-    
-    # Convert chapters to a list of dictionaries
-    return jsonify([{
-        'id': chapter.id,
-        'title': chapter.title,
-        'chapter_number': chapter.chapter_number,
-        'verse_count': chapter.verse_count,
-        'language': chapter.language,
-        'yoga_name': chapter.yoga_name,
-        'meaning': chapter.meaning,
-        'summary': chapter.summary
-    } for chapter in chapters])
-
-@app.route('/slokas/<int:chapter_number>', methods=['GET'])
-def get_slokas_by_chapter(chapter_number):
-    session = Session()
-    chapter = session.query(Chapter).filter_by(chapter_number=chapter_number).first()
-    if not chapter:
-        return jsonify({'error': 'Chapter not found'}), 404
-    
-    slokas = session.query(Sloka).filter_by(chapter_id=chapter.id).all()
-    session.close()
-
-    return jsonify([{
-        'id': sloka.id,
-        'sloka_text': sloka.sloka_text,
-        'meaning': sloka.meaning,
-        'speaker': sloka.speaker,
-        'language': sloka.language
-    } for sloka in slokas])
-
 # Dependency to get DB session
 def get_db():
     db = SessionLocal()
@@ -77,6 +27,13 @@ def get_db():
     finally:
         db.close()
 
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the Bhagavad Gita Explorer"}
+
+# Define a Pydantic model for the query
+class Query(BaseModel):
+    query: str
 @app.post("/ask/")
 async def ask_question(query: str, db: Session = Depends(get_db)):
     # Search the database for relevant content
@@ -98,7 +55,7 @@ def format_results(results):
 
 def call_openai_api(formatted_results):
     # Make a call to OpenAI's API
-    openai.api_key = "sk-jBF7Zi4kRM8VCc0xU25UbCGAuP4fipWe8jAVRiHzTQT3BlbkFJrxFL5I-o3gJn6H-B4ineZnsJ7C-MXvR_0oZyRMUV0A"
+    openai.api_key = "YOUR_API_KEY"  # Replace with your actual API key
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -107,11 +64,10 @@ def call_openai_api(formatted_results):
     )
     return response['choices'][0]['message']['content']
 
-@app.post("/ask/")
-async def ask_question(query: str):
-    answer = handle_user_query(query)
-    return {"answer": answer}
-
+# SQLAlchemy database setup
+DATABASE_URI = 'postgresql://aakash:chootu@localhost/bhagavad_gita_explorer'
+engine = create_engine(DATABASE_URI)
+SessionLocal = sessionmaker(bind=engine)
 
 if __name__ == "__main__":
     import uvicorn
