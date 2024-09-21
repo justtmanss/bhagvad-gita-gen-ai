@@ -1,7 +1,11 @@
 # assistant.py
 import openai
+import langsmith
 
-openai.api_key = 'your-api-key'
+# Initialize LangSmith with your API key
+langsmith.api_key = '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'
+
+openai.api_key = 'sk-jBF7Zi4kRM8VCc0xU25UbCGAuP4fipWe8jAVRiHzTQT3BlbkFJrxFL5I-o3gJn6H-B4ineZnsJ7C-MXvR_0oZyRMUV0A'
 
 def get_answer(question):
     response = openai.Completion.create(
