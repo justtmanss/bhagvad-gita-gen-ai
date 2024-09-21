@@ -1,1 +1,1 @@
-# bahgvad-gita-gen-ai
+# bhagvad-gita-gen-ai
