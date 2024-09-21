@@ -1,10 +1,13 @@
 # app.py
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from routes import router  # Import API routes
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Chapter, Sloka, Session  # Import the models and Session
+from model import Chapter, Sloka, Session  # Import the models and Session
+from sqlalchemy.orm import Session
+from database import SessionLocal, search_database  # Import your functions
+import openai
 
 
 app = FastAPI()
@@ -65,6 +68,50 @@ def get_slokas_by_chapter(chapter_number):
         'speaker': sloka.speaker,
         'language': sloka.language
     } for sloka in slokas])
+
+# Dependency to get DB session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.post("/ask/")
+async def ask_question(query: str, db: Session = Depends(get_db)):
+    # Search the database for relevant content
+    results = search_database(db, query)
+
+    if results:
+        # Format the results to send to OpenAI
+        formatted_results = format_results(results)
+
+        # Call OpenAI API for further processing
+        openai_response = call_openai_api(formatted_results)
+        return {"answer": openai_response}
+    else:
+        raise HTTPException(status_code=404, detail="No relevant information found.")
+
+def format_results(results):
+    # Format your results from the database for OpenAI
+    return " ".join([f"{chapter.title}: {sloka.sloka_text}" for chapter, sloka in results])
+
+def call_openai_api(formatted_results):
+    # Make a call to OpenAI's API
+    openai.api_key = "sk-jBF7Zi4kRM8VCc0xU25UbCGAuP4fipWe8jAVRiHzTQT3BlbkFJrxFL5I-o3gJn6H-B4ineZnsJ7C-MXvR_0oZyRMUV0A"
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "user", "content": formatted_results}
+        ]
+    )
+    return response['choices'][0]['message']['content']
+
+@app.post("/ask/")
+async def ask_question(query: str):
+    answer = handle_user_query(query)
+    return {"answer": answer}
+
 
 if __name__ == "__main__":
     import uvicorn
