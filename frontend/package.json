@@ -1,0 +1,11 @@
+{
+    "name": "bhagavad-gita-frontend",
+    "version": "1.0.0",
+    "scripts": {
+      "start": "react-scripts start"
+    },
+    "dependencies": {
+      "react": "^18.2.0"
+    }
+  }
+  
