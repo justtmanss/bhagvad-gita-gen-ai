@@ -1,16 +1,16 @@
-# assistant.py
 import openai
+import langsmith
 
-openai.api_key = 'your-api-key'
+# Initialize LangSmith with your API key
+langsmith.api_key = 'YOUR_LANGSMITH_API_KEY'
 
-def get_answer(question):
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=f"Answer this based on the Bhagavad Gita: {question}",
-        max_tokens=150
+openai.api_key = 'YOUR_OPENAI_API_KEY'
+
+def ask_krishna(question):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "user", "content": question}
+        ]
     )
-    return response.choices[0].text.strip()
-
-if __name__ == "__main__":
-    question = "What should I do in times of doubt?"
-    print(get_answer(question))
+    return response['choices'][0]['message']['content']
