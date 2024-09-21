@@ -1,14 +1,18 @@
-from flask import Blueprint, jsonify
+# routes.py
+from fastapi import APIRouter
 from models import Chapter, Sloka
+from database import SessionLocal
 
-api_bp = Blueprint('api', __name__)
+router = APIRouter()
 
-@api_bp.route('/chapters', methods=['GET'])
+@router.get("/chapters/")
 def get_chapters():
-    chapters = Chapter.query.all()
-    return jsonify([{'id': chapter.id, 'title': chapter.title} for chapter in chapters])
+    db = SessionLocal()
+    chapters = db.query(Chapter).all()
+    return chapters
 
-@api_bp.route('/slokas/<int:chapter_id>', methods=['GET'])
-def get_slokas_by_chapter(chapter_id):
-    slokas = Sloka.query.filter_by(chapter_id=chapter_id).all()
-    return jsonify([{'id': sloka.id, 'text': sloka.text} for sloka in slokas])
+@router.get("/slokas/{chapter_id}")
+def get_slokas(chapter_id: int):
+    db = SessionLocal()
+    slokas = db.query(Sloka).filter(Sloka.chapter_id == chapter_id).all()
+    return slokas

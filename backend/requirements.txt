@@ -1,4 +1,4 @@
-Flask
-Flask-SQLAlchemy
-openai
-psycopg2-binary  # For PostgreSQL
+fastapi
+uvicorn
+sqlalchemy
+psycopg2

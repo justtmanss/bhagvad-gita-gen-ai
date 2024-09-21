@@ -1,14 +1,16 @@
-from flask import Flask, jsonify
-from database import init_db
-from routes import api_bp
+# app.py
+from fastapi import FastAPI
+from routes import router
 
-app = Flask(__name__)
+app = FastAPI()
 
-# Initialize the database
-init_db(app)
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to Bhagavad Gita Explorer"}
 
-# Register API routes
-app.register_blueprint(api_bp)
+# Include the routes
+app.include_router(router)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
